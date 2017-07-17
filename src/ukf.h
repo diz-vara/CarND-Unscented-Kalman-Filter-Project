@@ -18,6 +18,9 @@ private:
   MatrixXd R_r_; // = MatrixXd(n_z, n_z);
   MatrixXd R_l_; // = MatrixXd(n_z, n_z);
 
+  std::ofstream logNIS_laser_;
+  std::ofstream logNIS_radar_;
+
 public:
 
   ///* initially set to false, set to true in first call of ProcessMeasurement
