@@ -11,6 +11,9 @@ using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
 class UKF {
+private:
+	void Angle_norm(double &angle) const;
+
 public:
 
   ///* initially set to false, set to true in first call of ProcessMeasurement
@@ -66,6 +69,8 @@ public:
 
   ///* Sigma point spreading parameter
   double lambda_;
+  double sqrt_lambda_plus_nx_; //to reduce calculations
+  int sigma_points_nr_; //total nr of sigma points
 
 
   /**
