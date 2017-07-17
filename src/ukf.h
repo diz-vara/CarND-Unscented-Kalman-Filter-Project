@@ -13,6 +13,10 @@ using Eigen::VectorXd;
 class UKF {
 private:
 	void Angle_norm(double &angle) const;
+  VectorXd H(VectorXd in) const;
+  long timestamp_;
+  MatrixXd R_r_; // = MatrixXd(n_z, n_z);
+  MatrixXd R_l_; // = MatrixXd(n_z, n_z);
 
 public:
 
