@@ -7,6 +7,8 @@ using Eigen::MatrixXd;
 using Eigen::VectorXd;
 using std::vector;
 
+const double EPSILON = 1e-9;
+
 /**
  * Initializes Unscented Kalman filter
  */
@@ -119,8 +121,13 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
 
       x_(0) = rho * cos(phi);
       x_(1) = rho * sin(phi);
-      x_(2) = rho_d;
     }
+    //object speed at the time of first measurement 
+    x_(2) = 0; //assume it is stationary 
+
+    //initialzie P_ by unit diagonal martrix
+    Eigen::VectorXd dg(5); dg.fill(1.); 
+    P_ = dg.asDiagonal();
 
     logNIS_laser_.open("NIS_laser.log");
     logNIS_radar_.open("NIS_radar.log");
@@ -171,12 +178,12 @@ void UKF::Prediction(double delta_t) {
 		  x_a = x_aug - (sqrt_lambda_plus_nx_ * L.col(col - n_aug_ - 1));
 
 
-	  double yaw = x_a(3);
-	  double v = x_a(2);
-	  double yaw_dot = x_a(4);
+	  const double yaw = x_a(3);
+    const double v = x_a(2);
+    const double yaw_dot = x_a(4);
 
-	  double nu_a = x_a(5);
-	  double nu_yaw = x_a(6);
+    const double nu_a = x_a(5);
+    const double nu_yaw = x_a(6);
 
 
 	  Nu <<
@@ -232,16 +239,12 @@ void UKF::Prediction(double delta_t) {
  * Updates the state and the state covariance matrix using a laser measurement.
  * @param {MeasurementPackage} meas_package
  */
+//TODO:: use linear update (like in EKF)
 void UKF::UpdateLidar(MeasurementPackage meas_package) {
-  /**
-  TODO:
-  You'll also need to calculate the lidar NIS.
-  */
   int n_z = 2;
   MatrixXd Tc = MatrixXd::Zero(n_x_, n_z);
   VectorXd z = meas_package.raw_measurements_;
   VectorXd z_diff;
-
 
   VectorXd z_pred = VectorXd::Zero(n_z);
   VectorXd s_point;
@@ -305,23 +308,24 @@ VectorXd UKF::H(VectorXd in) const
   VectorXd out = VectorXd::Zero(3);
 
   double norm2 = sqrt(p_x*p_x + p_y*p_y);
+
   out(0) = norm2;                           //r
-  out(1) = atan2(p_y, p_x);                 //phi
-  if (norm2 < 1e-9)
+  if (p_y == 0 && p_x == 0)
+    out(1) = 0;  //undefined situation
+  else
+    out(1) = atan2(p_y, p_x);                 //phi
+  if (norm2 < EPSILON)
     out(2) = sqrt(v1*v1 + v2*v2);
   else
     out(2) = (p_x*v1 + p_y * v2) / norm2;   //r_dot
   return out;
 }
+
 /*
  * Updates the state and the state covariance matrix using a radar measurement.
  * @param {MeasurementPackage} meas_package
  */
 void UKF::UpdateRadar(MeasurementPackage meas_package) {
-  /**
-  TODO:
-  You'll also need to calculate the radar NIS.
-  */
 	int n_z = 3;
 	MatrixXd Tc = MatrixXd::Zero(n_x_, n_z);
 	VectorXd z = meas_package.raw_measurements_;
